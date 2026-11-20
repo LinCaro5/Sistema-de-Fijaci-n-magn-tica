@@ -3,9 +3,7 @@
   ADS131M02 (2000 SPS, PGA 128) + XIAO ESP32-C3
 
   Uso (monitor serie a 115200, fin de línea "Nueva línea"):
-    1. Pon la ESP en el socket, deja el sensor SIN CARGA y envía  i
-       -> inicia el ADC y comienza la calibración de cero sin bloquear el loop.
-    2. Comandos:
+        Comandos:
          z  -> vuelve a tomar el cero (sin carga; proceso no bloqueante)
          p  -> pausa / reanuda la salida
          v  -> cambia entre CSV (para guardar) y texto legible con nombres y unidades
