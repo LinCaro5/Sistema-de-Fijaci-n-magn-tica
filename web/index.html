@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interfaz de monitoreo y control del sistema de fijación magnética con sensado de fuerza.">
+  <title>HMI | Sistema de Fijación Magnética</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><i class="bi bi-magnet"></i></div>
+        <div>
+          <div class="brand-title">SISTEMA MAGNÉTICO</div>
+          <div class="brand-subtitle">MONITOREO Y CONTROL</div>
+        </div>
+      </div>
+      <div class="sidebar-label">MENÚ PRINCIPAL</div>
+      <nav class="nav-menu" aria-label="Navegación principal">
+        <a class="nav-link active" href="#panel-general"><i class="bi bi-grid-1x2"></i><span>Panel general</span></a>
+        <a class="nav-link" href="#monitoreo-fuerza"><i class="bi bi-activity"></i><span>Monitoreo de fuerza</span></a>
+        <a class="nav-link" href="#estado-sistema"><i class="bi bi-cpu"></i><span>Estado del sistema magnético</span></a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="device-card">
+          <div class="device-icon"><i class="bi bi-motherboard"></i></div>
+          <div>
+            <strong>XIAO ESP32-C3</strong>
+            <span>Unidad de control</span>
+          </div>
+        </div>
+        <div class="sidebar-foot">Proyecto de grado · Ingeniería Mecatrónica</div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">INTERFAZ DE SUPERVISIÓN</div>
+          <h1>Sistema de fijación magnética</h1>
+          <p class="page-subtitle">Monitoreo de fuerzas y control remoto del prototipo robótico</p>
+        </div>
+        <div class="connection-pill" id="connection-pill">
+          <span class="status-dot"></span>
+          <span id="connection-text">Verificando conexión</span>
+        </div>
+      </header>
+
+      <section id="panel-general" class="dashboard-section">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">01</span>
+            <h2>Panel general</h2>
+            <p>Resumen del estado y las variables principales del sistema.</p>
+          </div>
+          <div class="last-update"><i class="bi bi-clock"></i> Última actualización: <strong id="last-update">Sin datos</strong></div>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric-card">
+            <div class="metric-top"><span>Fuerza en X</span><span class="metric-icon blue"><i class="bi bi-arrows"></i></span></div>
+            <div class="metric-value"><span id="overview-fx">--</span><small>N</small></div>
+            <div class="metric-caption">Componente tangencial X</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>Fuerza en Y</span><span class="metric-icon violet"><i class="bi bi-arrows"></i></span></div>
+            <div class="metric-value"><span id="overview-fy">--</span><small>N</small></div>
+            <div class="metric-caption">Componente tangencial Y</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>Magnitud resultante</span><span class="metric-icon teal"><i class="bi bi-bullseye"></i></span></div>
+            <div class="metric-value"><span id="overview-magnitude">--</span><small>N</small></div>
+            <div class="metric-caption">Resultante en el plano XY</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top"><span>Posición estimada</span><span class="metric-icon amber"><i class="bi bi-crosshair"></i></span></div>
+            <div class="metric-value"><span id="overview-position">--</span><small>°</small></div>
+            <div class="metric-caption" id="overview-position-label">Posición mecánica</div>
+          </article>
+        </div>
+
+        <div class="overview-bottom-grid">
+          <article class="panel-card">
+            <div class="card-heading">
+              <div><h3>Condición de comunicación</h3><p>Estado de la última telemetría recibida</p></div>
+              <i class="bi bi-wifi card-heading-icon"></i>
+            </div>
+            <div class="status-row">
+              <span class="status-label">Conexión con el dispositivo</span>
+              <strong id="device-status" class="status-value neutral">Sin verificar</strong>
+            </div>
+            <div class="status-row">
+              <span class="status-label">Movimiento</span>
+              <strong id="overview-motion" class="status-value neutral">Sin datos</strong>
+            </div>
+            <div class="status-row">
+              <span class="status-label">Patrón compatible con carga Z</span>
+              <strong id="overview-z" class="status-value neutral">Sin datos</strong>
+            </div>
+          </article>
+          <article class="panel-card">
+            <div class="card-heading">
+              <div><h3>Información de adquisición</h3><p>Parámetros de actualización de la interfaz</p></div>
+              <i class="bi bi-database card-heading-icon"></i>
+            </div>
+            <div class="status-row"><span class="status-label">Fuente de datos</span><strong class="status-value">ThingSpeak</strong></div>
+            <div class="status-row"><span class="status-label">Frecuencia de actualización web</span><strong class="status-value">15 s</strong></div>
+            <div class="status-row"><span class="status-label">Muestras perdidas reportadas</span><strong class="status-value" id="lost-samples">--</strong></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="monitoreo-fuerza" class="dashboard-section">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">02</span>
+            <h2>Monitoreo de fuerza</h2>
+            <p>Visualización de las componentes de fuerza tangencial y su comportamiento temporal.</p>
+          </div>
+        </div>
+
+        <div class="force-layout">
+          <article class="panel-card force-chart-card">
+            <div class="card-heading">
+              <div><h3>Historial de fuerzas</h3><p>Variación de las componentes X y Y en el tiempo</p></div>
+              <span class="unit-tag">Fuerza (N)</span>
+            </div>
+            <div class="chart-wrap"><canvas id="force-chart" aria-label="Gráfica de fuerzas X y Y en función del tiempo"></canvas></div>
+            <div class="chart-footnote">Eje horizontal: hora de registro. Eje vertical: fuerza (N).</div>
+          </article>
+          <article class="panel-card force-detail-card">
+            <div class="card-heading"><div><h3>Componentes de fuerza</h3><p>Valores instantáneos reportados</p></div></div>
+            <div class="force-reading">
+              <div class="force-axis axis-x">X</div>
+              <div><span class="reading-label">Fuerza X</span><strong><span id="force-fx">--</span> <small>N</small></strong></div>
+            </div>
+            <div class="force-reading">
+              <div class="force-axis axis-y">Y</div>
+              <div><span class="reading-label">Fuerza Y</span><strong><span id="force-fy">--</span> <small>N</small></strong></div>
+            </div>
+            <div class="reading-divider"></div>
+            <div class="detail-row"><span>Magnitud en el plano XY</span><strong><span id="force-magnitude">--</span> N</strong></div>
+            <div class="detail-row"><span>Ángulo de la fuerza</span><strong><span id="force-angle">--</span> °</strong></div>
+          </article>
+        </div>
+
+        <article class="panel-card z-card">
+          <div class="z-icon"><i class="bi bi-layers"></i></div>
+          <div class="z-content">
+            <div class="z-title-line"><h3>Detección de patrón compatible con carga Z</h3><span id="z-badge" class="state-badge neutral">Sin datos</span></div>
+            <p>El indicador identifica un patrón de respuesta de los dos puentes extensométricos compatible con una carga perpendicular al plano XY. No representa una medición ni una estimación de fuerza Z en newtons.</p>
+            <div class="z-data-grid">
+              <div><span>Señal del patrón</span><strong><span id="z-signal">--</span> µV</strong></div>
+              <div><span>Relación de respuesta</span><strong id="z-ratio">--</strong></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section id="estado-sistema" class="dashboard-section">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">03</span>
+            <h2>Estado del sistema magnético</h2>
+            <p>Supervisión de la posición estimada y operación remota del mecanismo.</p>
+          </div>
+        </div>
+
+        <div class="system-grid">
+          <article class="panel-card position-card">
+            <div class="card-heading"><div><h3>Posición del mecanismo</h3><p>Estimación angular de la posición mecánica</p></div><i class="bi bi-compass card-heading-icon"></i></div>
+            <div class="position-display"><strong id="system-position">--</strong><span>°</span></div>
+            <div class="position-track"><div class="position-progress" id="position-progress"></div></div>
+            <div class="position-scale"><span>0° · A</span><span>30° · B</span></div>
+            <div class="motion-indicator"><span class="motion-indicator-dot" id="motion-dot"></span><span>Estado del movimiento:</span><strong id="system-motion">Sin datos</strong></div>
+          </article>
+
+          <article class="panel-card control-card">
+            <div class="card-heading"><div><h3>Control remoto</h3><p>Envío de comandos al sistema</p></div><i class="bi bi-controller card-heading-icon"></i></div>
+            <div class="control-buttons">
+              <button type="button" class="control-button button-a" data-command="1"><i class="bi bi-arrow-left-circle"></i><span>Posición A</span></button>
+              <button type="button" class="control-button button-b" data-command="2"><i class="bi bi-arrow-right-circle"></i><span>Posición B</span></button>
+              <button type="button" class="control-button button-stop" data-command="0"><i class="bi bi-stop-circle"></i><span>STOP</span></button>
+            </div>
+            <div class="command-feedback" id="command-feedback" role="status">Selecciona una posición para enviar un comando.</div>
+            <div class="safety-note"><i class="bi bi-exclamation-triangle"></i><span>El comando STOP desde esta interfaz no sustituye un paro de emergencia físico. Mantén disponible el medio de desconexión local.</span></div>
+          </article>
+        </div>
+      </section>
+
+      <footer class="page-footer">
+        <span>Sistema de fijación magnética con sensado de fuerza</span>
+        <span>Interfaz HMI · Proyecto de grado</span>
+      </footer>
+    </main>
+  </div>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
